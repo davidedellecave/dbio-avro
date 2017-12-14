@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+	<!-- ============================================================ -->
+	<!-- Databases -->
+	<bean id="JdbcConfig_DQ_MYSQL" class="ddc.support.jdbc.JdbcConfig">
+		<property name="host" value="192.168.76.224" />
+		<property name="port" value="3306" />
+		<property name="database" value="dataquality" />
+		<property name="user" value="root" />
+		<property name="password" value="Davidedc3" />
+	</bean>
+
+	<bean id="JdbcConfig_DQ_PostgreSQL" class="ddc.support.jdbc.JdbcConfig">
+		<property name="host" value="localhost" />
+		<property name="port" value="5432" />
+		<property name="database" value="dataquality" />
+		<property name="user" value="davide" />
+		<property name="password" value="davidedc" />
+	</bean>
+
+	<bean id="JdbcConfig_DQ_PostgreSQL_REMOTE" class="ddc.support.jdbc.JdbcConfig">
+		<property name="host" value="192.168.205.235" />
+		<property name="port" value="5432" />
+		<property name="database" value="dataquality" />
+		<property name="user" value="root" />
+		<property name="password" value="S2ESprint25" />
+	</bean>
+
+	<bean id="JdbcConfig_GAIA_PostgreSQL_REMOTE" class="ddc.support.jdbc.JdbcConfig">
+		<property name="host" value="192.168.205.235" />
+		<property name="port" value="5432" />
+		<property name="database" value="gaia" />
+		<property name="user" value="root" />
+		<property name="password" value="S2ESprint25" />
+	</bean>
+
+	<bean id="JdbcConfig_GAIA_PostgreSQL_LOCAL" class="ddc.support.jdbc.JdbcConfig">
+		<property name="host" value="localhost" />
+		<property name="port" value="5432" />
+		<property name="database" value="gaia" />
+		<property name="user" value="davide" />
+		<property name="password" value="davidedc" />
+	</bean>
+
+	<bean id="ConnectionFactory" class="ddc.support.jdbc.db.PostgreSqlFactory">
+		<constructor-arg ref="JdbcConfig_GAIA_PostgreSQL_LOCAL" />
+	</bean>
+
+	<!-- ============================================================ -->
+	<!-- Tables -->
+	<bean id="dataquality.anagrafica" class="ddc.task.model.TableConfig">
+		<property name="enabled" value="true" />
+		<property name="table" value="RET_farm_anagrafica" />
+		<property name="columns" value="*" />
+		<property name="maxrows" value="0" />
+		<property name="selectScriptFile" value="" />
+	</bean>
+
+	<bean id="dataquality.movimenti" class="ddc.task.model.TableConfig">
+		<property name="enabled" value="true" />
+		<property name="table" value="RET_movimenti" />
+		<property name="columns" value="*" />
+		<property name="maxrows" value="0" />
+		<property name="selectScriptFile" value="" />
+	</bean>
+
+	<bean id="gaia.movimenti" class="ddc.task.model.TableConfig">
+		<property name="enabled" value="true" />
+		<property name="table" value="movimenti" />
+		<property name="columns" value="*" />
+		<property name="maxrows" value="0" />
+		<property name="selectScriptFile" value="" />
+	</bean>
+
+	<bean id="gaia.acquisti" class="ddc.task.model.TableConfig">
+		<property name="enabled" value="true" />
+		<property name="table" value="acquisti" />
+		<property name="columns" value="*" />
+		<property name="maxrows" value="0" />
+		<property name="selectScriptFile" value="" />
+	</bean>
+
+	<!-- ============================================================ -->
+	<!-- ============================================================ -->
+	<!-- Tables -->
+	<bean id="TablePool" class="ddc.task.model.TablePool2Config">
+		<property name="jdbcFactory" ref="ConnectionFactory" />
+		<property name="concurrentConnections" value="1" />
+		<property name="connectionRetry" value="3" />
+		<property name="fetch" value="50000" />
+		<property name="batch" value="10000" />
+		<property name="tables">
+			<list>
+				<!-- <ref bean="dataquality.anagrafica" /> <ref bean="dataquality.movimenti" 
+					/> -->
+				<ref bean="gaia.movimenti" />
+				<ref bean="gaia.acquisti" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- ================================================================================ -->
+	<!-- ================================================================================ -->
+	<bean id="DbImp_ConsoleConfig" class="ddc.dbimp.DbImp_ConsoleConfig">
+		<property name="targetSqlTypeMap">
+			<bean class="ddc.support.jdbc.db.PostreSqlTypeMap" />
+		</property>
+		<property name="sourceFolder" value="/Users/davide/tmp/out" />
+
+		<property name="compressionMode" value="snappy" />
+		<property name="overrideMaxRows" value="0" />
+		<!-- The following var are evaluated: ${S2EP_HOME} ${UUID} ${Timestamp} 
+			${DateTime} -->
+		<property name="sourceFileTemplate" value="" />
+		<property name="truncateTargetTableOnError" value="true" />
+		<property name="truncateTargetTableOnStartup" value="true" />
+		<property name="tablePoolList">
+			<list>
+				<ref bean="TablePool" />
+			</list>
+		</property>
+	</bean>
+</beans>

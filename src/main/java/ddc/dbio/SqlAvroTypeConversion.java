@@ -24,12 +24,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import ddc.support.jdbc.schema.LiteDbColumn;
 import ddc.support.jdbc.schema.LiteDbTable;
-import ddc.support.util.LogConsole;
-import ddc.support.util.LogListener;
 import ddc.support.util.StringInputStream;
 
 public class SqlAvroTypeConversion {
-	private final static LogListener logger = new LogConsole(SqlAvroTypeConversion.class);
+//	private final static LogListener logger = new LogConsole(SqlAvroTypeConversion.class);
 	private static final TreeMap<JDBCType, AvroManagedType> jdbcManagedMap = new TreeMap<>();
 	private static final TreeMap<AvroManagedType, Schema.Type> managedAvroMap = new TreeMap<>();
 

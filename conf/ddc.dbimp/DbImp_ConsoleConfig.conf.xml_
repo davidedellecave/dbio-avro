@@ -3,7 +3,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-
+	<!-- ============================================================ -->
 	<!-- ============================================================ -->
 	<!-- Databases -->
 	<bean id="JdbcConfig_DQ_MYSQL" class="ddc.support.jdbc.JdbcConfig">
@@ -51,6 +51,7 @@
 	</bean>
 
 	<!-- ============================================================ -->
+	<!-- ============================================================ -->
 	<!-- Tables -->
 	<bean id="dataquality.anagrafica" class="ddc.task.model.TableConfig">
 		<property name="enabled" value="true" />
@@ -95,8 +96,8 @@
 		<property name="batch" value="10000" />
 		<property name="tables">
 			<list>
-				<!-- <ref bean="dataquality.anagrafica" /> <ref bean="dataquality.movimenti" 
-					/> -->
+				<ref bean="dataquality.anagrafica" />
+				<ref bean="dataquality.movimenti" />
 				<ref bean="gaia.movimenti" />
 				<ref bean="gaia.acquisti" />
 			</list>

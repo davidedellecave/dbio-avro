@@ -105,8 +105,8 @@ public class DbImp_SqlInsertTask extends SqlDataDTask {
 			trgConn = createConnection(pool);
 			truncateOnStartup(conf, trgConn, tableCtx);
 			int batchSize = pool.getBatch() > 0 ? pool.getBatch() : DEFAULT_BATCH_SIZE;
-			AvroToSql sqlReader = new AvroToSql();
-			sqlReader.execute(stats, avroReadingPath, trgConn, tableCtx.getDbTable(), batchSize);
+			AvroToSqlWriter avroReader = new AvroToSqlWriter();
+			avroReader.execute(stats, avroReadingPath, trgConn, tableCtx.getDbTable(), batchSize);
 		} catch (Throwable e) {
 			if (trgConn!=null) {
 				truncateOnError(conf, trgConn, tableCtx);
@@ -122,17 +122,30 @@ public class DbImp_SqlInsertTask extends SqlDataDTask {
 	private final static int DEFAULT_CONNECTION_RETRY = 1;
 	private final static int DEFAULT_CONNECTION_WAIT = 10 * 1000;
 
+//	// handle connection
+//	private Connection createConnection(TablePool2Config targetPool) throws ClassNotFoundException, SQLException {
+//		Connection trgConn = null;
+//		// target
+//		int retry = targetPool.getConnectionRetry() > 0 ? targetPool.getConnectionRetry() : DEFAULT_CONNECTION_RETRY;
+//		trgConn = targetPool.getJdbcFactory().createConnection(retry, DEFAULT_CONNECTION_WAIT);
+//		trgConn.setAutoCommit(false);
+//		logger.info(LOG_HEADER + "target connection :[" + targetPool.getJdbcFactory().toString() + "]");
+//		return trgConn;
+//	}
+
+	
 	// handle connection
 	private Connection createConnection(TablePool2Config targetPool) throws ClassNotFoundException, SQLException {
 		Connection trgConn = null;
 		// target
-		int retry = targetPool.getConnectionRetry() > 0 ? targetPool.getConnectionRetry() : DEFAULT_CONNECTION_RETRY;
-		trgConn = targetPool.getJdbcFactory().createConnection(retry, DEFAULT_CONNECTION_WAIT);
+//		int retry = targetPool.getConnectionRetry() > 0 ? targetPool.getConnectionRetry() : DEFAULT_CONNECTION_RETRY;
+		trgConn = this.getConnection(targetPool.getJdbcFactory());
 		trgConn.setAutoCommit(false);
 		logger.info(LOG_HEADER + "target connection :[" + targetPool.getJdbcFactory().toString() + "]");
 		return trgConn;
 	}
 
+	
 	private void truncateOnError(DbImp_ConsoleConfig conf, Connection conn, AvroTableContext tableCtx) throws SQLException {
 		if (conf.isTruncateTargetTableOnError()) {
 			String truncateSql = "TRUNCATE TABLE " + tableCtx.getTable();

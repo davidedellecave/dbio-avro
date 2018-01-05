@@ -23,9 +23,9 @@ import ddc.support.util.LogConsole;
 import ddc.support.util.LogListener;
 import ddc.support.util.Statistics;
 
-public class AvroToSql {
-	private final static LogListener logger = new LogConsole(AvroToSql.class);
-	private static final String LOG_HEADER = "Insert table - ";
+public class AvroToSqlWriter {
+	private final static LogListener logger = new LogConsole(AvroToSqlWriter.class);
+	private static final String LOG_HEADER = "Avro To Sql Writer - ";
 
 	public void execute(Statistics stats, Path srcAvro, Connection trgConn, LiteDbTable targetTable, int batchSize) throws Exception {
 		final Chronometer chron = new Chronometer(5 * 1000);

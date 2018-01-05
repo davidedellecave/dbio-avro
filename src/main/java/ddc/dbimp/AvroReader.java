@@ -5,7 +5,6 @@ import java.io.IOException;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
-import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumReader;

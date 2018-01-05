@@ -1,17 +1,16 @@
 package ddc.dbio;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.List;
 
 import org.apache.avro.Schema;
 
 import ddc.support.jdbc.JdbcConnectionFactory;
+import ddc.support.jdbc.schema.LiteDb;
 import ddc.support.jdbc.schema.LiteDbTable;
 import ddc.support.task.Task;
+import ddc.support.task.TaskException;
 import ddc.support.util.LogConsole;
 import ddc.support.util.LogListener;
 import ddc.task.model.TablePool2Config;
@@ -32,28 +31,25 @@ public class DbIO_BuildSqlSchemaTask extends Task {
 	@SuppressWarnings("unchecked")
 	private void executeTablePoll(TablePool2Config pool, int overrideMaxRows) throws ClassNotFoundException, SQLException, AvroConversionException, IOException {
 		//
-		Statement sqlStatement = null;
+		logger.info(LOG_HEADER + "Building schema...");
 		JdbcConnectionFactory fact = pool.getJdbcFactory();
-		try (Connection sqlConnection = fact.createConnection()) {
-			for (AvroTableContext tableCtx : (List<AvroTableContext>) pool.getTables()) {
-				String sqlSelectOneRow = fact.getSqlLimit(tableCtx.getTable(), tableCtx.getColumns(), 1);
-				logger.info(LOG_HEADER + "select one row - sql:[" + sqlSelectOneRow + "]");
-				sqlStatement = sqlConnection.createStatement();
-				ResultSet rs = sqlStatement.executeQuery(sqlSelectOneRow);
-				LiteDbTable dbTable = LiteDbTable.build(tableCtx.getTable(), rs.getMetaData());
-				String sqlSelect = getSqlSelect(pool, tableCtx, overrideMaxRows);
+		LiteDb db = LiteDb.build(fact);
+		for (AvroTableContext tableCtx : (List<AvroTableContext>) pool.getTables()) {
+			List<LiteDbTable> dbTables = db.findByTable(tableCtx.getTable());
+			if (dbTables.size() >= 1) {
+				LiteDbTable dbTable = dbTables.get(0);
+
 				tableCtx.setDbTable(dbTable);
-				tableCtx.setSqlSelectOneRow(sqlSelectOneRow);
+
+				String sqlSelect = getSqlSelect(pool, tableCtx, overrideMaxRows);
 				tableCtx.setSqlSelect(sqlSelect);
-				rs.close();
 
 				SqlAvroTypeConversion conv = new SqlAvroTypeConversion();
 				Schema avroSchema = conv.buildAvroSchema(dbTable);
 				tableCtx.setAvroSchema(avroSchema);
+			} else {
+				throw new TaskException(LOG_HEADER + "Table not found - table:[" + tableCtx.getTable() + "]");
 			}
-		} finally {
-			if (sqlStatement != null && !sqlStatement.isClosed())
-				sqlStatement.close();
 		}
 	}
 

@@ -1,5 +1,6 @@
 package ddc.dbimp;
 
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +17,7 @@ import ddc.task.model.TablePool2Config;
 
 public class DbImp_SetupTask extends Task {
 	private final static LogListener logger = new LogConsole(DbImp_SetupTask.class);
-	private static final String LOG_HEADER = "Startup - ";
+	private static final String LOG_HEADER = "Setup - ";
 
 	public void doRun() {
 		DbImp_ConsoleConfig conf = (DbImp_ConsoleConfig) get(DbImp_ConsoleConfig.class);
@@ -48,6 +49,9 @@ public class DbImp_SetupTask extends Task {
 				AvroTableContext ctx = new AvroTableContext(tableConf);
 				ctx.setSignature(PathProvider.getSignature(pool, tableConf, conf.getOverrideMaxRows()));
 				ctx.setAvroPath(PathProvider.getAvroSource(conf, pool, tableConf));
+				if (!Files.exists(ctx.getAvroPath())) {
+					throw new TaskException(LOG_HEADER + "Avro file not found - file:[" + ctx.getAvroPath() + "]");					
+				}
 				ctx.setReportPath(Paths.get(ctx.getAvroPath().toString() + ".report"));
 				ctx.setSourceSqlSchemaPath(PathProvider.getSource(conf, pool, tableConf, "source.sql"));
 				ctx.setTargetSqlSchemaPath(PathProvider.getSource(conf, pool, tableConf, "target.sql"));	

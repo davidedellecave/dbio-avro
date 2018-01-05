@@ -5,10 +5,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import ddc.dbio.AvroTableContext;
-import ddc.support.jack.JackUtil;
 import ddc.support.task.Task;
 import ddc.support.util.LogConsole;
 import ddc.support.util.LogListener;

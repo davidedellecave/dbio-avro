@@ -24,8 +24,6 @@ import ddc.dbio.AvroConversionException;
 import ddc.dbio.AvroTableContext;
 import ddc.dbio.SqlAvroTypeConversion;
 import ddc.support.jdbc.JdbcConnectionFactory;
-import ddc.support.jdbc.schema.LiteDbColumn;
-import ddc.support.jdbc.schema.LiteDbTable;
 import ddc.support.util.Chronometer;
 import ddc.support.util.LogConsole;
 import ddc.support.util.LogListener;
@@ -40,34 +38,34 @@ public class SqlToAvro {
 
 	public void execute(Statistics stats, TablePool2Config pool, AvroTableContext tableCtx, FileOutputStream avroStream, CodecFactory codecFactory) throws JsonGenerationException, JsonMappingException, ClassNotFoundException, SQLException, IOException, AvroConversionException {
 		if (DEBUG) {
-			doDebugExecute(stats, pool, tableCtx, avroStream, codecFactory);
+//			doDebugExecute(stats, pool, tableCtx, avroStream, codecFactory);
 		} else {
 			exAvroData(stats, pool, tableCtx, avroStream, codecFactory);
 		}
 	}
 
-	private void doDebugExecute(Statistics stats, TablePool2Config pool, AvroTableContext tblCtx, FileOutputStream avroStream, CodecFactory codecFactory) {
-		LiteDbTable sqlSchema = null;
-		try {
-			JdbcConnectionFactory factory =	pool.getJdbcFactory();
-			try (Connection sqlConnection = factory.createConnection()) {
-				sqlSchema = LiteDbTable.build(sqlConnection, tblCtx.getTable(), tblCtx.getSqlSelectOneRow());
-			}
-			String selectRows = tblCtx.getSqlSelect();
-			String selectOneRow = tblCtx.getSqlSelectOneRow();
-			for (LiteDbColumn col : sqlSchema.getColumns()) {
-				String newSelectRows = selectRows.replace("*", col.getName());
-				String newSelectOneRow = selectOneRow.replace("*", col.getName());
-				logger.debug(LOG_HEADER + newSelectRows);
-				AvroTableContext newTblCtx = tblCtx.clone();
-				newTblCtx.setSqlSelectOneRow(newSelectOneRow);
-				newTblCtx.setSqlSelect(selectRows);
-				exAvroData(stats, pool, newTblCtx, avroStream, codecFactory);
-			}
-		} catch (Throwable e) {
-			logger.error(sqlSchema.toString() + " - " + e.getMessage());
-		} 
-	}
+//	private void doDebugExecute(Statistics stats, TablePool2Config pool, AvroTableContext tblCtx, FileOutputStream avroStream, CodecFactory codecFactory) {
+//		LiteDbTable sqlSchema = null;
+//		try {
+//			JdbcConnectionFactory factory =	pool.getJdbcFactory();
+//			try (Connection sqlConnection = factory.createConnection()) {
+//				sqlSchema = LiteDbTable.build(sqlConnection, tblCtx.getSqlSelectOneRow());
+//			}
+//			String selectRows = tblCtx.getSqlSelect();
+//			String selectOneRow = tblCtx.getSqlSelectOneRow();
+//			for (LiteDbColumn col : sqlSchema.getColumns()) {
+//				String newSelectRows = selectRows.replace("*", col.getName());
+//				String newSelectOneRow = selectOneRow.replace("*", col.getName());
+//				logger.debug(LOG_HEADER + newSelectRows);
+//				AvroTableContext newTblCtx = tblCtx.clone();
+//				newTblCtx.setSqlSelectOneRow(newSelectOneRow);
+//				newTblCtx.setSqlSelect(selectRows);
+//				exAvroData(stats, pool, newTblCtx, avroStream, codecFactory);
+//			}
+//		} catch (Throwable e) {
+//			logger.error(sqlSchema.toString() + " - " + e.getMessage());
+//		} 
+//	}
 	
 	private void exAvroData(Statistics stats, TablePool2Config pool, AvroTableContext tableCtx,  FileOutputStream avroStream, CodecFactory codecFactory) throws ClassNotFoundException, SQLException, JsonGenerationException, JsonMappingException, IOException, AvroConversionException {
 		logger.info(LOG_HEADER + "Starting table export... - " + tableCtx.getSignature());		

@@ -13,14 +13,22 @@
 		<property name="user" value="root" />
 		<property name="password" value="Davidedc3" />
 	</bean>
-
-	<bean id="JdbcConfig_PostgreSQL" class="ddc.support.jdbc.JdbcConfig">
+	<bean id="ConnectionFactory_MYSQL" class="ddc.support.jdbc.db.MySqlFactory">
+		<constructor-arg ref="JdbcConfig_MYSQL" />
+	</bean>
+	
+	
+	<bean id="JdbcConfig_PostgreSQL_LOCAL" class="ddc.support.jdbc.JdbcConfig">
 		<property name="host" value="localhost" />
 		<property name="port" value="5432" />
 		<property name="database" value="dataquality" />
 		<property name="user" value="davide" />
 		<property name="password" value="davidedc" />
+	</bean>	
+	<bean id="ConnectionFactory_POSTGRESQL_LOCAL" class="ddc.support.jdbc.db.PostgreSqlFactory">
+		<constructor-arg ref="JdbcConfig_PostgreSQL" />
 	</bean>
+
 
 	<bean id="JdbcConfig_MSSQL_ROBERTO" class="ddc.support.jdbc.JdbcConfig">
 		<property name="host" value="192.168.205.201" />
@@ -29,18 +37,24 @@
 		<property name="user" value="sa" />
 		<property name="password" value="DotJava862" />
 	</bean>
-
-	<bean id="ConnectionFactory_MYSQL" class="ddc.support.jdbc.db.MySqlFactory">
-		<constructor-arg ref="JdbcConfig_MYSQL" />
-	</bean>
-	
-	<bean id="ConnectionFactory" class="ddc.support.jdbc.db.MsSqlFactory">
+	<bean id="ConnectionFactory_MSSQL_ROBERTO" class="ddc.support.jdbc.db.MsSqlFactory">
 		<constructor-arg ref="JdbcConfig_MSSQL_ROBERTO" />
 	</bean>	
+	
 
-	<bean id="ConnectionFactory_POSTGRESQL_LOCAL" class="ddc.support.jdbc.db.PostgreSqlFactory">
-		<constructor-arg ref="JdbcConfig_PostgreSQL" />
+	<bean id="JdbcConfig_PostgreSQL_FACTORY" class="ddc.support.jdbc.JdbcConfig">
+		<property name="host" value="192.168.205.235" />
+		<property name="port" value="5432" />
+		<property name="database" value="gaia" />
+		<property name="user" value="root" />
+		<property name="password" value="S2ESprint25" />
 	</bean>
+	<bean id="ConnectionFactory_PostgreSQL_FACTORY" class="ddc.support.jdbc.db.PostgreSqlFactory">
+		<constructor-arg ref="JdbcConfig_PostgreSQL_FACTORY" />
+	</bean>
+		
+
+
 
 	<!-- ============================================================ -->
 	<!-- Tables -->
@@ -75,11 +89,27 @@
 		<property name="maxrows" value="0" />
 		<property name="selectScriptFile" value="" />
 	</bean>
+	
+	<bean id="public.movimenti_inizializzati" class="ddc.task.model.TableConfig">
+		<property name="enabled" value="true" />
+		<property name="table" value="movimenti_inizializzati" />
+		<property name="columns" value="*" />
+		<property name="maxrows" value="0" />
+		<property name="selectScriptFile" value="" />
+	</bean>
 
+	<bean id="public.acquisti_inizializzati" class="ddc.task.model.TableConfig">
+		<property name="enabled" value="true" />
+		<property name="table" value="acquisti_inizializzati" />
+		<property name="columns" value="*" />
+		<property name="maxrows" value="0" />
+		<property name="selectScriptFile" value="" />
+	</bean>
+	
 	<!-- ============================================================ -->
 	<!-- Tables -->
 	<bean id="TablePool" class="ddc.task.model.TablePool2Config">
-		<property name="jdbcFactory" ref="ConnectionFactory" />
+		<property name="jdbcFactory" ref="ConnectionFactory_PostgreSQL_FACTORY" />
 		<property name="concurrentConnections" value="1" />
 		<property name="connectionRetry" value="3" />
 		<property name="fetch" value="100000" />
@@ -90,8 +120,10 @@
 				<ref bean="dataquality.anagrafica" />
 				<ref bean="dataquality.movimenti" />
 				<ref bean="estat.acquisti" />
-				-->
 				<ref bean="estat.movimenti" />
+				-->
+				<ref bean="public.movimenti_inizializzati" />			
+				<ref bean="public.acquisti_inizializzati" />				
 			</list>
 		</property>
 	</bean>
@@ -100,7 +132,7 @@
 	<!-- ================================================================================ -->
 	<bean id="DbExp_ConsoleConfig" class="ddc.dbexp.DbExp_ConsoleConfig">
 		<property name="sourceSqlTypeMap">
-			<bean class="ddc.support.jdbc.db.MySqlTypeMap" />
+			<bean class="ddc.support.jdbc.db.PostreSqlTypeMap" />
 		</property>
 		<property name="targetSqlTypeMap">
 			<bean class="ddc.support.jdbc.db.PostreSqlTypeMap" />

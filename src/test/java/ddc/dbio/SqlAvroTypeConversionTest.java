@@ -1,9 +1,10 @@
 package ddc.dbio;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
 
-public class SqlAvroTypeConversionTest extends TestCase {
+public class SqlAvroTypeConversionTest {
 
+	@Test
 	public void testSetAvroField() {
 //		SqlAvroTypeConversion conv = new SqlAvroTypeConversion();
 		

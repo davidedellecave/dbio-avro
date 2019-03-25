@@ -26,11 +26,11 @@ public class DbImpAvro_Main extends TaskPool {
 
 	private void execute(String[] args) throws InterruptedException {
 		ArgsValue argsValue = new ArgsValue(args);
+		argsValue.setConfClass(DbImp_ConsoleConfig.class);
 
 		TaskSchema schema1 = createSchema1();
-		argsValue.setConfClass(DbImp_ConsoleConfig.class);
 		TaskExecutor e = new TaskExecutor(schema1, argsValue);
-		this.add(e);
+		this.add(e);	
 
 		TaskPoolManager m = new TaskPoolManager();
 		m.runSinglePool(this);

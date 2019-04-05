@@ -1,9 +1,12 @@
 package ddc.dbexp;
 
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
 
 import ddc.dbio.AvroTableContext;
 import ddc.dbio.PathProvider;
@@ -35,7 +38,7 @@ public class DbExp_SetupTask extends Task {
 					if (tableConf.isEnabled()) {
 						logger.warn(LOG_HEADER + "Table is enabled:[" + tableConf.getTable() + "]");		
 					} else {
-						logger.info(LOG_HEADER + "Table is not enabled:[" + tableConf.getTable() + "]");		
+						logger.info(LOG_HEADER + "Table is NOT enabled:[" + tableConf.getTable() + "]");		
 					}
  				}
 			}
@@ -46,12 +49,19 @@ public class DbExp_SetupTask extends Task {
 			List<AvroTableContext> list = new ArrayList<>();
 			for (TableConfig tableConf : pool.getTables()) {
 				AvroTableContext ctx = new AvroTableContext(tableConf);
-				ctx.setSignature(PathProvider.getSignature(pool, tableConf, conf.getOverrideMaxRows()));
+				ctx.setSignature(PathProvider.getSignature(conf, pool, tableConf));
 				ctx.setAvroPath(PathProvider.getAvroTarget(conf, pool, tableConf));
 				ctx.setReportPath(Paths.get(ctx.getAvroPath().toString() + ".report"));
 				ctx.setSourceSqlSchemaPath(PathProvider.getTarget(conf, pool, tableConf, "source.sql"));
 				ctx.setTargetSqlSchemaPath(PathProvider.getTarget(conf, pool, tableConf, "target.sql"));	
 				ctx.setAvroSchemaPath(PathProvider.getTarget(conf, pool, tableConf, "target.avsc"));
+				if (StringUtils.isNotBlank(tableConf.getSelectScriptFile())) {
+					Path path = Paths.get(tableConf.getSelectScriptFile());
+					if (!Files.exists(path)) {
+						throw new TaskException(LOG_HEADER + "Select script file not found - file:[" + path + "]");
+					}
+					ctx.setSelectScriptPath(path);
+				}
 				if (isTableValid(conf, ctx)) {
 					list.add(ctx);
 				}

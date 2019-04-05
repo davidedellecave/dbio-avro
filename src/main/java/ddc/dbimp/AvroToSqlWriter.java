@@ -24,6 +24,7 @@ import ddc.support.util.LogListener;
 import ddc.support.util.Statistics;
 
 public class AvroToSqlWriter {
+	private static boolean DEBUG = false;
 	private final static LogListener logger = new LogConsole(AvroToSqlWriter.class);
 	private static final String LOG_HEADER = "Avro To Sql Writer - ";
 
@@ -35,33 +36,42 @@ public class AvroToSqlWriter {
 		List<Triple<JDBCType, Schema.Type, AvroManagedType>> triples = null;
 		SqlAvroTypeConversion avroConv = new SqlAvroTypeConversion();
 		try {
-			//source avro
+			// source avro
 			logger.info(LOG_HEADER + "selecting data - source file:[" + srcAvro + "]");
 			datumReader = new GenericDatumReader<GenericRecord>();
 			dataFileReader = new DataFileReader<GenericRecord>(srcAvro.toFile(), datumReader);
-			//target connection
+			// target connection
 			String sqlInsert = targetTable.buildInsertInto("\"", "\"");
 			logger.info(LOG_HEADER + "building template to insert data - target sql:[" + sqlInsert + "]  batchSize:[" + batchSize + "]");
 			trgStatement = trgConn.prepareStatement(sqlInsert);
-			//loop
+			// loop
 			int recCounter = 0;
 			GenericRecord record = null;
 			while (dataFileReader.hasNext()) {
-				record = dataFileReader.next(record);
-				if (recCounter == 1)
-					logger.debug(LOG_HEADER + record);
 				recCounter++;
+				record = dataFileReader.next(record);
+				// if (recCounter == 1)
+				// logger.debug(LOG_HEADER + record);
 				trgStatement.clearParameters();
-				if (triples==null)
+				if (triples == null)
 					triples = avroConv.buildTypes(record.getSchema(), targetTable);
+				String lastRecord = LOG_HEADER;
 				for (LiteDbColumn c : targetTable.getColumns()) {
 					Object value = record.get(c.getName());
-					avroConv.setSqlField(triples.get(c.getIndex()-1), c.getIndex(), trgStatement, value);
+					lastRecord += " col:[" + c.getName() + "] value:[" + value + "]";
+					avroConv.setSqlField(triples.get(c.getIndex() - 1), c.getIndex(), trgStatement, value);
 				}
-				int[] affected = addAndExecuteBatch(trgStatement, batchSize, recCounter);
-				updateStats(stats, affected);
-				if (chron.isCountdownCycle())
-					logger.debug(LOG_HEADER + "executeBatch - " + targetTable.getTableName() + " at line#:[" + recCounter + "]");
+				if (DEBUG)
+					logger.debug(lastRecord);
+				try {
+					int[] affected = addAndExecuteBatch(trgStatement, batchSize, recCounter);
+					updateStats(stats, affected);
+					if (chron.isCountdownCycle())
+						logger.debug(LOG_HEADER + "executeBatch - " + targetTable.getTableName() + " at line#:[" + recCounter + "]");
+				} catch (Throwable t) {
+					logger.error(lastRecord, t);
+					throw t;
+				}
 			}
 			int[] affected = executeBatch(trgStatement);
 			updateStats(stats, affected);

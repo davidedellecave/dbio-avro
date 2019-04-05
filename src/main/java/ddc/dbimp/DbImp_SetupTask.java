@@ -47,9 +47,9 @@ public class DbImp_SetupTask extends Task {
 			List<AvroTableContext> list = new ArrayList<>();
 			for (TableConfig tableConf : pool.getTables()) {
 				AvroTableContext ctx = new AvroTableContext(tableConf);
-				ctx.setSignature(PathProvider.getSignature(pool, tableConf, conf.getOverrideMaxRows()));
+				ctx.setSignature(PathProvider.getSignature(conf, pool, tableConf));
 				ctx.setAvroPath(PathProvider.getAvroSource(conf, pool, tableConf));
-				if (!Files.exists(ctx.getAvroPath())) {
+				if (tableConf.isEnabled() && !Files.exists(ctx.getAvroPath())) {
 					throw new TaskException(LOG_HEADER + "Avro file not found - file:[" + ctx.getAvroPath() + "]");					
 				}
 				ctx.setReportPath(Paths.get(ctx.getAvroPath().toString() + ".report"));

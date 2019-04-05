@@ -1,10 +1,13 @@
 package ddc.dbio;
 
 import java.io.IOException;
-import java.sql.SQLException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import org.apache.avro.Schema;
+import org.apache.commons.lang3.StringUtils;
 
 import ddc.support.jdbc.JdbcConnectionFactory;
 import ddc.support.jdbc.schema.LiteDb;
@@ -28,20 +31,19 @@ public class DbIO_BuildSqlSchemaTask extends Task {
 		}
 	}
 
+	// private boolean FORCE_IF_TABLE_NOTFOUND=true;
 	@SuppressWarnings("unchecked")
-	private void executeTablePoll(TablePool2Config pool, int overrideMaxRows) throws ClassNotFoundException, SQLException, AvroConversionException, IOException {
-		//
-		logger.info(LOG_HEADER + "Building schema...");
-		JdbcConnectionFactory fact = pool.getJdbcFactory();
-		LiteDb db = LiteDb.build(fact);
+	private void executeTablePoll(TablePool2Config pool, int overrideMaxRows) throws Exception {
 		for (AvroTableContext tableCtx : (List<AvroTableContext>) pool.getTables()) {
+			LiteDb db = buildSchema(pool, tableCtx);
 			List<LiteDbTable> dbTables = db.findByTable(tableCtx.getTable());
-			if (dbTables.size() >= 1) {
+			if (dbTables.size() > 0) {
 				LiteDbTable dbTable = dbTables.get(0);
 
 				tableCtx.setDbTable(dbTable);
 
 				String sqlSelect = getSqlSelect(pool, tableCtx, overrideMaxRows);
+				logger.info(LOG_HEADER + "Select:[" + sqlSelect + "]");
 				tableCtx.setSqlSelect(sqlSelect);
 
 				SqlAvroTypeConversion conv = new SqlAvroTypeConversion();
@@ -53,21 +55,56 @@ public class DbIO_BuildSqlSchemaTask extends Task {
 		}
 	}
 
-	private String getSqlSelect(TablePool2Config pool, AvroTableContext ctx, int overrideMaxRows) {
+	private LiteDb buildSchema(TablePool2Config pool, AvroTableContext tableCtx) throws Exception {
+		logger.info(LOG_HEADER + "Building schema...");
+		JdbcConnectionFactory jdbcFactory = pool.getJdbcFactory();
+		String tableName = tableCtx.getTable();
+		String schemaName = !StringUtils.isBlank(pool.getSchema()) ? pool.getSchema() : null;
+		LiteDb db = new LiteDb(jdbcFactory.getSchemaBuilder());
+		db.build(jdbcFactory, schemaName, tableName);
+		logger.info(LOG_HEADER + "Building schema. done");
+		return db;
+	}
+
+	private String getSqlSelect(TablePool2Config pool, AvroTableContext tableCtx, int overrideMaxRows) throws IOException {
 		// one row
 		JdbcConnectionFactory factory = pool.getJdbcFactory();
 		// rows
+		String tableName = tableCtx.getTable();
+		if (StringUtils.isNotBlank(pool.getSchema())) {
+			tableName = pool.getSchema() + "." + tableCtx.getTable();
+		}
 		String selectRows = "";
-		if (overrideMaxRows > 0) {
-			logger.info(LOG_HEADER + "all queries are limited - maxrows:[" + overrideMaxRows + "]");
-			selectRows = factory.getSqlLimit(ctx.getTable(), ctx.getColumns(), overrideMaxRows);
+		if (tableCtx.getSelectScriptPath() != null) {
+			Path path = tableCtx.getSelectScriptPath();
+			selectRows = new String(Files.readAllBytes(path));
 		} else {
-			if (ctx.getMaxrows() > 0) {
-				selectRows = factory.getSqlLimit(ctx.getTable(), ctx.getColumns(), ctx.getMaxrows());
+			if (overrideMaxRows > 0) {
+				logger.info(LOG_HEADER + "all selects are limited - maxrows:[" + overrideMaxRows + "]");
+				selectRows = factory.getSqlLimit(tableName, tableCtx.getColumns(), overrideMaxRows);
 			} else {
-				selectRows = "SELECT $COLUMNS FROM $TABLE".replace("$COLUMNS", ctx.getColumns()).replace("$TABLE", ctx.getTable());
+				if (tableCtx.getMaxrows() > 0) {
+					logger.info(LOG_HEADER + "select is limited - maxrows:[" + tableCtx.getMaxrows() + "]");
+					selectRows = factory.getSqlLimit(tableName, tableCtx.getColumns(), tableCtx.getMaxrows());
+				} else {
+					selectRows = "SELECT $COLUMNS FROM $TABLE".replace("$COLUMNS", tableCtx.getColumns()).replace("$TABLE", tableName);
+				}
 			}
 		}
 		return selectRows;
 	}
+
+	// private String parseWhereCondition(String where) {
+	// String s = where;
+	// if (where.contains("days")) {
+	// s = StringUtils.substringBetween(s, "days(", ")").trim();
+	// String[] toks = s.split(",");
+	// if (toks.length==2) {
+	// int days = Integer.parseInt(toks[0].trim());
+	// String pattern = StringUtils.substringBetween(s, "\"");
+	// }
+	// }
+	// return s;
+	//
+	// }
 }

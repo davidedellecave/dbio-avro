@@ -27,7 +27,6 @@ import ddc.support.jdbc.schema.LiteDbTable;
 import ddc.support.util.StringInputStream;
 
 public class SqlAvroTypeConversion {
-//	private final static LogListener logger = new LogConsole(SqlAvroTypeConversion.class);
 	private static final TreeMap<JDBCType, AvroManagedType> jdbcManagedMap = new TreeMap<>();
 	private static final TreeMap<AvroManagedType, Schema.Type> managedAvroMap = new TreeMap<>();
 
@@ -208,7 +207,11 @@ public class SqlAvroTypeConversion {
 			trgStatement.setLong(jdbcIndex, (Long) value);
 			break;
 		case String:
-			trgStatement.setString(jdbcIndex, String.valueOf(value));
+			String s = String.valueOf(value);
+			if (s.contains("\0")) {
+				s = StringUtils.replaceAll(s, "\0", "");
+			}
+			trgStatement.setString(jdbcIndex, s);
 			break;
 		case Timestamp:
 			if (avroType.equals(Schema.Type.LONG)) {
@@ -312,8 +315,8 @@ public class SqlAvroTypeConversion {
 	}
 
 	private Schema.Type getAvroType(Schema schema, String colName) throws AvroConversionException {
-		Field avroField =schema.getField(colName); 
-		if (avroField==null) {
+		Field avroField = schema.getField(colName);
+		if (avroField == null) {
 			throw new AvroConversionException("Column not found:[" + colName + "] schema:[" + schema.toString() + "]");
 		}
 		Schema.Type avroType = schema.getField(colName).schema().getType();

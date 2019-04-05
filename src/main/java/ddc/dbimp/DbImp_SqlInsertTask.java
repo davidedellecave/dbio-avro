@@ -56,11 +56,11 @@ public class DbImp_SqlInsertTask extends SqlDataDTask {
 				resultList.add(result);
 			}
 			logger.info(LOG_HEADER + "executing tasks...");
-			// Loop to join the thread
+			// Loop to join the threads
 			for (Future<TaskInfo> future : resultList) {
 				future.get();
 			}
-			//
+			// Loop to get the results
 			List<TaskInfo> taskList = new ArrayList<>();
 			resultList.forEach(x -> {
 				try {
@@ -68,7 +68,7 @@ public class DbImp_SqlInsertTask extends SqlDataDTask {
 				} catch (Exception e) {
 				}
 			});
-			// Aggregate
+			// Aggregate the results
 			TaskInfo gTask = TaskInfo.aggregate("Main import task", taskList);
 			gTask.setSubTasks(taskList);
 			// this.set(ReportAggregateTask.PROPNAME_AGGREGATED_TASK, gTask);
@@ -88,7 +88,7 @@ public class DbImp_SqlInsertTask extends SqlDataDTask {
 		logger.info(LOG_HEADER + "avroFile:[" + tableCtx.getAvroPath() + "] reportFile:[" + tableCtx.getReportPath() + "]");
 		TaskInfo tInfo = new TaskInfo(tableCtx.getTable());
 		try {
-			exImport(tInfo.getStats(), conf, pool, tableCtx);
+			exImportTable(tInfo.getStats(), conf, pool, tableCtx);
 			return tInfo.terminateAsSucceeded();
 		} catch (Throwable e) {
 			logger.error(LOG_HEADER + e.getMessage(), e);
@@ -96,7 +96,7 @@ public class DbImp_SqlInsertTask extends SqlDataDTask {
 		}
 	}
 
-	private void exImport(Statistics stats, DbImp_ConsoleConfig conf, TablePool2Config pool, AvroTableContext tableCtx) throws Exception {
+	private void exImportTable(Statistics stats, DbImp_ConsoleConfig conf, TablePool2Config pool, AvroTableContext tableCtx) throws Exception {
 		Path avroPath = tableCtx.getAvroPath();
 		Path avroReadingPath = FileUtil.postfixFileName(avroPath, FILENAME_READING_POSTFIX);
 		FileUtil.rename(avroPath, avroReadingPath.getFileName().toString());

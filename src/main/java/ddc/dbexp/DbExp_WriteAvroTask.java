@@ -95,7 +95,7 @@ public class DbExp_WriteAvroTask extends Task {
 		logger.info(LOG_HEADER + "avroFile:[" + tableCtx.getAvroPath() + "] reportFile:[" + tableCtx.getReportPath() + "]");
 		TaskInfo tInfo = new TaskInfo(tableCtx.getTable());
 		try {
-			exExport(tInfo.getStats(), conf, pool, tableCtx);
+			exportTable(tInfo.getStats(), conf, pool, tableCtx);
 			return tInfo.terminateAsSucceeded();
 		} catch (Throwable e) {
 			logger.error(LOG_HEADER + e.getMessage(), e);
@@ -104,11 +104,12 @@ public class DbExp_WriteAvroTask extends Task {
 		}
 	}
 
-	private void exExport(Statistics stats, DbExp_ConsoleConfig conf, TablePool2Config pool, AvroTableContext tableCtx) throws JsonGenerationException, JsonMappingException, ClassNotFoundException, SQLException, IOException, AvroConversionException {
+	private void exportTable(Statistics stats, DbExp_ConsoleConfig conf, TablePool2Config pool, AvroTableContext tableCtx) throws JsonGenerationException, JsonMappingException, ClassNotFoundException, SQLException, IOException, AvroConversionException {
 		FileOutputStream avroStream = null;		
 		Path avroPath = tableCtx.getAvroPath();
 		Path avroWritingPath = FileUtil.postfixFileName(avroPath, FILENAME_WRITING_POSTFIX);
 		try {
+			//Delete the working file in "writing" status 
 			if (Files.exists(avroWritingPath)) {
 				Files.delete(avroWritingPath);
 			}

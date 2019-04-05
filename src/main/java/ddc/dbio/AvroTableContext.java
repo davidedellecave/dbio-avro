@@ -15,8 +15,8 @@ public class AvroTableContext extends TableConfig {
 	private Path avroSchemaPath;
 	private Path sourceSqlSchemaPath;
 	private Path targetSqlSchemaPath;
-
 	private Path reportPath;
+	private Path selectScriptPath;
 	private String sqlSelect;
 
 	public AvroTableContext(TableConfig tc) {
@@ -37,6 +37,7 @@ public class AvroTableContext extends TableConfig {
 		t.setSourceSqlSchemaPath(this.getSourceSqlSchemaPath());
 		t.setSqlSelect(this.getSqlSelect());
 		t.setTargetSqlSchemaPath(this.getTargetSqlSchemaPath());
+		t.setSelectScriptPath(this.getSelectScriptPath());
 		return t;
 	}
 
@@ -110,6 +111,14 @@ public class AvroTableContext extends TableConfig {
 
 	public void setSqlSelect(String sqlSelect) {
 		this.sqlSelect = sqlSelect;
+	}
+
+	public Path getSelectScriptPath() {
+		return selectScriptPath;
+	}
+
+	public void setSelectScriptPath(Path selectScriptPath) {
+		this.selectScriptPath = selectScriptPath;
 	}
 
 }
